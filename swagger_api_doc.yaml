@@ -1,0 +1,521 @@
+openapi: 3.0.0
+info:
+  title: Fitness API
+  description: API Documentation for Fitness functionalities
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+  - url: https://nutrition-website-be-1.onrender.com
+tags:
+  - name: Diary
+    description: Endpoints related to diary management
+  - name: Exercise
+    description: Endpoints related to exercise management
+  - name: User
+    description: Endpoints related to user authentication and setting
+paths:
+  #Diary API
+  /api/diaries:
+    post:
+      tags:
+        - Diary
+      summary: Create a new diary entry
+      description: Create a new diary entry for a user on a specific date.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Data for creating a diary entry
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                  example: "2024-11-18"
+      responses:
+        201:
+          description: Diary created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Nhật ký đã được tạo thành công.
+                  diary:
+                    type: object
+                    properties:
+                      diary_id:
+                        type: integer
+                      user_id:
+                        type: integer
+                      date:
+                        type: string
+                        format: date
+        400:
+          description: Diary already exists for this user and date
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Người dùng này đã có nhật ký cho ngày này rồi.
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Lỗi khi tạo nhật ký.
+
+  /api/diaries/dashboard:
+    get:
+      tags:
+        - Diary
+      summary: Fetch a user's diary entry for a specific date
+      description: Retrieve the diary entry for a user on a specific date.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: true
+          description: Date of the diary to fetch
+          schema:
+            type: string
+            format: date
+            example: "2024-11-18"
+      responses:
+        200:
+          description: Diary entry retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  diaries:
+                    type: object
+                    properties:
+                      diary_id:
+                        type: integer
+                        example: 123
+                      user_id:
+                        type: integer
+                        example: 1
+                      date:
+                        type: string
+                        format: date
+                        example: "2024-11-18"
+                      total_calories_burned:
+                        type: integer
+                        example: 500
+                      total_time:
+                        type: integer
+                        example: 60
+                      total_exercise:
+                        type: integer
+                        example: 3
+                      time_completion:
+                        type: integer
+                        example: 45
+                      exercise_completion:
+                        type: integer
+                        example: 2
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Lỗi khi lấy nhật ký.
+
+  #Exercise API
+  /api/exercises:
+    post:
+      tags:
+        - Exercise
+      summary: Add a new exercise
+      description: Adds a new exercise entry to the diary for a specific user and date.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                  description: The date for which the exercise is being logged (yyyy-mm-dd).
+                exerciseID:
+                  type: integer
+                  description: The ID of the exercise.
+                time:
+                  type: number
+                  format: float
+                  description: Duration of the exercise in hours.
+                status:
+                  type: string
+                  description: Status of the exercise (e.g., completed, ongoing).
+                weight:
+                  type: number
+                  format: float
+                  description: The user's weight in kg.
+      responses:
+        "201":
+          description: Exercise successfully added.
+        "400":
+          description: Exercise already exists for the given diary.
+        "500":
+          description: Server error while adding the exercise.
+
+    get:
+      tags:
+        - Exercise
+      summary: Get all exercises for a user and date
+      description: Retrieves all exercises logged in a diary for a specific user and date.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: The date for which exercises are retrieved (yyyy-mm-dd).
+      responses:
+        "200":
+          description: List of exercises.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    exercise_id:
+                      type: integer
+                    name:
+                      type: string
+                    met:
+                      type: number
+        "404":
+          description: No exercises found for the given date.
+        "500":
+          description: Server error while retrieving exercises.
+
+  /api/exercises/{exerciseID}:
+    put:
+      tags:
+        - Exercise
+      summary: Update an exercise
+      description: Updates the details of an exercise logged in the diary.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: exerciseID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the exercise to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                  description: The date of the diary (yyyy-mm-dd).
+                time:
+                  type: number
+                  format: float
+                  description: Updated duration of the exercise in hours.
+                status:
+                  type: string
+                  description: Updated status of the exercise.
+                weight:
+                  type: number
+                  format: float
+                  description: Updated weight of the user in kg.
+      responses:
+        "200":
+          description: Exercise successfully updated.
+        "404":
+          description: Exercise or diary entry not found.
+        "500":
+          description: Server error while updating the exercise.
+
+    delete:
+      tags:
+        - Exercise
+      summary: Delete an exercise
+      description: Deletes an exercise entry from the diary.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: exerciseID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the exercise to delete.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                  description: The date of the diary (yyyy-mm-dd).
+      responses:
+        "200":
+          description: Exercise successfully deleted.
+        "404":
+          description: Exercise not found.
+        "500":
+          description: Server error while deleting the exercise.
+
+  /api/exercises/details/{exerciseID}:
+    get:
+      tags:
+        - Exercise
+      summary: Get exercise details
+      description: Retrieves details of a specific exercise.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: exerciseID
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the exercise to retrieve.
+      responses:
+        "200":
+          description: Exercise details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercise_id:
+                    type: integer
+                  name:
+                    type: string
+                  met:
+                    type: number
+        "404":
+          description: Exercise not found.
+        "500":
+          description: Server error while retrieving exercise details.
+
+  #User API
+  /api/users/register:
+    post:
+      summary: Register a new user
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        "201":
+          description: User successfully registered.
+        "400":
+          description: Invalid input data.
+        "500":
+          description: Internal server error.
+
+  /api/users/login:
+    post:
+      summary: Login a user
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        "200":
+          description: Login successful. Token returned.
+        "400":
+          description: Invalid login credentials.
+        "500":
+          description: Internal server error.
+
+  /api/users/forgot-password:
+    post:
+      summary: Request password reset
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+      responses:
+        "200":
+          description: Password reset email sent.
+        "400":
+          description: Invalid email address.
+        "500":
+          description: Internal server error.
+
+  /api/users/reset-password:
+    post:
+      summary: Reset a user's password
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+                new_password:
+                  type: string
+                  example: "newpassword123"
+      responses:
+        "200":
+          description: Password reset successfully.
+        "400":
+          description: Invalid input data.
+        "500":
+          description: Internal server error.
+
+  /api/users/setting:
+    get:
+      tags:
+        - User
+      summary: Get user settings
+      description: Retrieves the settings of the logged-in user.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved user settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  password:
+                    type: string
+
+        "401":
+          description: Unauthorized. Token is missing or invalid.
+        "500":
+          description: Internal server error.
+
+    put:
+      tags:
+        - User
+      summary: Update user settings
+      description: Updates the settings (e.g., height, weight, activity level) for the logged-in user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: Successfully updated user settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+        "400":
+          description: Invalid data provided for update.
+        "401":
+          description: Unauthorized. Token is missing or invalid.
+        "500":
+          description: Internal server error.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Định dạng token (thường là JWT, có thể đổi nếu khác)
