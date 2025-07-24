@@ -1,22 +1,30 @@
-const User = require('./user');
-const Diary = require('./diary');
-const Exercise = require('./exercise');
-const DiaryExercise = require('./diary_exercise');
+const User = require('./user.model');
+const Product = require('./product.model');
+const Category = require('./category.model');
+const Order = require('./order.model');
+const OrderItem = require('./orderItem.model');
+const Quote = require('./quote.model');
+const Post = require('./post.model');
 
-// Thiết lập quan hệ
-User.hasMany(Diary, { foreignKey: 'user_id' });
-Diary.belongsTo(User, { foreignKey: 'user_id' });
+// Associations
+User.hasMany(Order, { foreignKey: 'user_id' });
+Order.belongsTo(User, { foreignKey: 'user_id' });
 
-Diary.belongsToMany(Exercise, { through: DiaryExercise, foreignKey: 'diary_id' });
-Exercise.belongsToMany(Diary, { through: DiaryExercise, foreignKey: 'exercise_id' });
+Category.hasMany(Product, { foreignKey: 'category_id' });
+Product.belongsTo(Category, { foreignKey: 'category_id' });
 
+Order.hasMany(OrderItem, { foreignKey: 'order_id' });
+OrderItem.belongsTo(Order, { foreignKey: 'order_id' });
 
-DiaryExercise.belongsTo(Diary, { foreignKey: 'diary_id' });
-DiaryExercise.belongsTo(Exercise, { foreignKey: 'exercise_id' }); // This line establishes the association
+Product.hasMany(OrderItem, { foreignKey: 'product_id' });
+OrderItem.belongsTo(Product, { foreignKey: 'product_id' });
 
 module.exports = {
     User,
-    Diary,
-    Exercise,
-    DiaryExercise,
+    Product,
+    Category,
+    Order,
+    OrderItem,
+    Quote,
+    Post,
 };
